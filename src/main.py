@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional
 from dotenv import load_dotenv
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from huggingface_hub import InferenceClient
 # Placeholder imports for future implementation
 # from langchain.vectorstores import Chroma
 # from langchain.chat_models import ChatOpenAI
@@ -11,20 +11,30 @@ class RegBot:
     """
     Main class for the GA4GH Compliance Assistant.
     """
+    load_dotenv()
     
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "meta-llama/Llama-3.1-8B-Instruct"):
-        self.api_key = api_key or os.getenv("git checkout poc
-git pull origin poc")
+    def __init__(
+        self, 
+        api_key: Optional[str] = None,
+        model_name: str = "meta-llama/Llama-3.1-8B-Instruct"
+    ):
+        self.api_key = api_key or os.getenv("HF_API_TOKEN")
+        if not self.api_key:
+            raise ValueError("HF_API_TOKEN not found")
+        
         self.vector_db = None
-        self.llm = model_name 
-        self.load_llm(self.llm)
+        self.model_name = model_name
+        self.load_llm()
         print("Initializing RegBot Core...")
 
-    def load_llm(self, model_name: str):
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=self.api_key)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=self.api_key)
-        self.llm_pipeline = pipeline("text-generation", model=self.model, tokenizer=self.tokenizer)
-
+    def load_llm(self):
+        """
+        Initializes the Hugging Face Inference API client.
+        """
+        self.client = InferenceClient(
+            model=self.model_name,
+            token=self.api_key
+        )
 
     def ingest_policy_documents(self, file_path: str) -> bool:
         """

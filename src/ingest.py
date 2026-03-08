@@ -1,6 +1,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+from typing import List, Dict
 
 GA4GH_FRAMEWORK_URL = "https://www.ga4gh.org/framework/"
 

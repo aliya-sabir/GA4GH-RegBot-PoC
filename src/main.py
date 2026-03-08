@@ -1,24 +1,26 @@
+import json
 import os
-from typing import List, Optional, Dict
+from typing import Any, List, Optional, Dict
+
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
-import requests
-from bs4 import BeautifulSoup
-import re
 from sentence_transformers import SentenceTransformer, util
 
+from compliance import ComplianceChecker
 from ingest import fetch_chunks
+
 URL = "https://www.ga4gh.org/framework/"
 # Placeholder imports for future implementation
 # from langchain.vectorstores import Chroma
 # from langchain.chat_models import ChatOpenAI
 # from langchain.document_loaders import PyPDFLoader
 
+load_dotenv()
+
 class RegBot:
     """
     Main class for the GA4GH Compliance Assistant.
     """
-    load_dotenv()
     def __init__(
         self, 
         api_key: Optional[str] = None,
@@ -48,7 +50,7 @@ class RegBot:
     
         
 
-    def retrieve_relevant_clauses(self, user_query: str, clauses: List[Dict[str, str]], top_k: int = 3) -> List[Dict[str, any]]:
+    def retrieve_relevant_clauses(self, user_query: str, clauses: List[Dict[str, str]], top_k: int = 3) -> List[Dict[str, Any]]:
         """
         Phase 2: RAG Implementation.
         Search vector DB for clauses relevant to the user's consent form.
@@ -59,7 +61,6 @@ class RegBot:
             print("Warning: No clauses provided for retrieval")
             return []
         
-        # Encode user query
         user_embedding = self.embedding_model.encode(user_query, convert_to_tensor=True)
 
         results = []
@@ -82,18 +83,14 @@ class RegBot:
         top_results = sorted(results, key=lambda x: x["similarity"], reverse=True)[:top_k]
         return top_results
 
-    def check_compliance(self, user_consent_form: str) -> dict:
+    def check_compliance(self, user_consent_form: str, clauses: List[Dict[str,str]], top_k: int = 3) -> dict:
         """
         Phase 3: LLM Analysis.
         Compares user input against retrieved GA4GH clauses.
         """
         print("Analyzing compliance gap...")
-        # Placeholder for LLM Chain
-        return {
-            "status": "Non-Compliant",
-            "missing_elements": ["Data Use Limitation", "Cloud Storage Provision"],
-            "suggested_fix": "Add specific clause regarding secondary use of data."
-        }
+        checker = ComplianceChecker(self.client)
+        return checker.check_compliance(user_consent_form, clauses, top_k)
 
 if __name__ == "__main__":
     # Entry point for testing the pipeline
@@ -112,3 +109,6 @@ if __name__ == "__main__":
         print(f"  {r['text']}")
         print()
 
+    llm_output = bot.check_compliance(query, retrieved_clauses, top_k=3)
+    print("\nCompliance Analysis Result:") 
+    print(json.dumps(llm_output, indent=2))

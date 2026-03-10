@@ -67,7 +67,7 @@ class RegBot:
         print(f"Stored {stored} chunks in ChromaDB.")
         return stored
 
-    def retrieve_relevant_clauses(self, user_query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+    def retrieve_relevant_clauses(self, user_query: str, top_k: int = 10) -> List[Dict[str, Any]]:
         """
         Phase 2: RAG Implementation.
         Query ChromaDB for clauses relevant to the user's consent form.
@@ -78,7 +78,7 @@ class RegBot:
             print("Warning: ChromaDB collection is empty — run ingest first.")
         return results
 
-    def check_compliance(self, user_consent_form: str, clauses: List[Dict[str,str]], top_k: int = 3) -> dict:
+    def check_compliance(self, user_consent_form: str, clauses: List[Dict[str,str]], top_k: int = 10) -> dict:
         """
         Phase 3: LLM Analysis.
         Compares user input against retrieved GA4GH clauses.
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     
     # Test retrieval with sample query
     query = "We will obtain explicit consent from participants for data sharing and secondary research."
-    retrieved_clauses = bot.retrieve_relevant_clauses(query, top_k=3)
+    retrieved_clauses = bot.retrieve_relevant_clauses(query, top_k=10)
     
     print(f"\nTop {len(retrieved_clauses)} relevant clauses for query:")
     print(f"'{query}'\n")
@@ -105,6 +105,6 @@ if __name__ == "__main__":
         print(f"  {r['text']}")
         print()
 
-    llm_output = bot.check_compliance(query, retrieved_clauses, top_k=3)
+    llm_output = bot.check_compliance(query, retrieved_clauses, top_k=10)
     print("\nCompliance Analysis Result:") 
     print(json.dumps(llm_output, indent=2, ensure_ascii=False))

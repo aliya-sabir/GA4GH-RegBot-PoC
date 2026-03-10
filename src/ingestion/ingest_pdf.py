@@ -8,9 +8,15 @@ from pypdf import PdfReader
 
 SOURCES_CONFIG = Path(__file__).parent.parent / "pdf_sources.json"
 
-CHUNK_SIZE = 700
-CHUNK_OVERLAP = 120
-MAX_CLAUSE_CHARS = 1500
+#change 1: decreased chunk size to avoid underfiting 
+
+# CHUNK_SIZE = 700
+# CHUNK_OVERLAP = 120
+# MAX_CLAUSE_CHARS = 1500
+
+CHUNK_SIZE = 400 
+CHUNK_OVERLAP = 80 
+MAX_CLAUSE_CHARS = 800 
 
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,

@@ -81,7 +81,7 @@ class ComplianceChecker:
         except json.JSONDecodeError:
             return None
         
-    def check_compliance(self, user_consent_form:str, clauses: List[Dict[str,str]], top_k: int = 3) -> Dict[str,Any]:
+    def check_compliance(self, user_consent_form:str, clauses: List[Dict[str,str]], top_k: int = 10) -> Dict[str,Any]:
         top_clauses = clauses[:top_k]
 
         fallback = {

@@ -32,3 +32,4 @@ def load_tests() -> list[TestScenario]:
         for line in f:
             data = json.loads(line.strip())
             tests.append(TestScenario(**data))
+    return tests

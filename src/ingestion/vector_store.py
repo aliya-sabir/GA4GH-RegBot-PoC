@@ -2,17 +2,17 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import chromadb
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 
 CHROMA_DIR = str(Path(__file__).parent.parent / "chroma_db")
 COLLECTION_NAME = "ga4gh_chunks"
 INGEST_BATCH = 64  # documents per ChromaDB add call
 
-
 class VectorStore:
 
     def __init__(self, embedding_model: SentenceTransformer):
         self.embedding_model = embedding_model
+        self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
         self.client = chromadb.PersistentClient(path=CHROMA_DIR)
         self.collection = self.client.get_or_create_collection(
             name=COLLECTION_NAME,
@@ -50,15 +50,15 @@ class VectorStore:
             stored += len(batch)
         return stored
 
-    def query(self, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:
-        """ top_k similar clauses for query """
+    def query(self, query_text: str, top_k: int = 10) -> List[Dict[str, Any]]:
+        #top_k similar clauses for query
         if self.collection.count() == 0:
             return []
 
         query_embedding = self.embedding_model.encode(query_text).tolist()
         results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=top_k,
+            n_results=top_k*3,   #added more results for reranker
             include=["documents", "metadatas", "distances"],
         )
 
@@ -78,4 +78,13 @@ class VectorStore:
                 "source": meta.get("source_url", ""),
                 "page": meta.get("page", 0),
             })
-        return clauses
+
+        #change 2: added reranker for better relevance
+        if self.reranker:
+            scores = self.reranker.predict([(query_text, c["text"]) for c in clauses])
+            for c, score in zip(clauses, scores):
+                c["rerank_score"] = round(score, 4)
+            clauses.sort(key=lambda x: x["rerank_score"], reverse=True)
+        #for clause in clauses[:top_k]:
+            #print(f"Reranked clause: {clause['title']} (similarity: {clause['similarity']}, rerank_score: {clause.get('rerank_score')})")
+        return clauses[:top_k]

@@ -24,6 +24,7 @@ splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", ". ", " "],
 )
 
+#for pattern matching of clause numbers in different formats 
 _ROMAN = r"(?:(?:X{1,3}(?:IX|IV|V?I{0,3})|IX|IV|V?I{1,3}|VI{0,3}))"
 
 SUB_SUBSECTION_PATTERN = re.compile(r"^(\d+\.\d+\.\d+)\.?\s+(.+)$")
@@ -32,15 +33,45 @@ SECTION_PATTERN = re.compile(r"^(\d+)[\.\s]+(.+)$")
 ROMAN_SECTION_PATTERN = re.compile(rf"^({_ROMAN})\.?\s+(.+)$", re.IGNORECASE)
 MIXED_PATTERN = re.compile(rf"^(\d+)\.({_ROMAN})\.?\s+(.+)$", re.IGNORECASE) #some pdfs have a mix of numeric systems
 
+#for cleaning up pages headers and footers 
+
+_PAGE_NUMBER_RE = re.compile(r"^\s*\d{1,3}\s*$")
+# spaced-out capital headers 
+_PAGE_HEADER_RE = re.compile(
+    r"^\d*\s*[A-Z]\s+[A-Z]+(?:\s+[A-Z]\s*[A-Z]+)*\s*$"
+)
+# repeated document title headers that were breaking parsing
+_DOC_TITLE_HEADERS = [
+    re.compile(r"^\s*\d{4}\s+POLICY\s+ON\s+.+$", re.IGNORECASE),
+    re.compile(r"^\s*POL\s+\d+\s+v[\d.]+.*$", re.IGNORECASE),
+    re.compile(r"^\s*Global\s+Alliance\s+for\s+Genomics\s+(?:and|&)\s+Health.*$", re.IGNORECASE),
+    re.compile(r"^\s*GA4GH\s+Data\s+Privacy\s+and\s+Security\s+Policy\s*$", re.IGNORECASE),
+    re.compile(r"^\s*Framework\s+for\s+Responsible\s+Sharing\s+of\s+Genomic.*$", re.IGNORECASE),
+    re.compile(r"^\s*FRAMEWORK\s+FOR\s+INVOLVING\s+AND\s+ENGAGING.*$", re.IGNORECASE),
+    re.compile(r"^\s*Version\s+POL\s+\d+.*$", re.IGNORECASE),
+]
+
+def _is_header_or_footer(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if _PAGE_NUMBER_RE.match(stripped):
+        return True
+    if _PAGE_HEADER_RE.match(stripped):
+        return True
+    return any(pattern.match(stripped) for pattern in _DOC_TITLE_HEADERS)
 
 def _clean_text(text: str) -> str:
     #normalize bullet points, zero-width spaces, and excess whitespace
-    text = text.replace("\u200b", "")  # zero-width spaces
-    text = re.sub(r"[\u2022\u25cf\u25a0\u25aa\u25b8\u25ba]\s*", "", text)  # bullet chars
-    text = re.sub(r"[^\S\n]+", " ", text)  # collapse spaces/tabs but keep newlines
-    text = re.sub(r"\n{3,}", "\n\n", text)  # collapse excessive blank lines
-    return text.strip()
+    text = text.replace("\u200b", "") 
+    text = re.sub(r"[\u2022\u25cf\u25a0\u25aa\u25b8\u25ba]\s*", "", text) 
+    text = re.sub(r"[^\S\n]+", " ", text) 
+    text = re.sub(r"\n{3,}", "\n\n", text) 
 
+    lines = text.split("\n")
+    cleaned_lines = [line for line in lines if not _is_header_or_footer(line)]
+
+    return "\n".join(cleaned_lines).strip()
 
 def extract_pages(file_path: str) -> List[Tuple[int, str]]:
     #extract text and return page no and text
@@ -58,11 +89,6 @@ def extract_pdf_text(file_path: str) -> str:
     return "\n".join(text for _, text in extract_pages(file_path))
 
 
-# page headers/footers to ignore
-_PAGE_HEADER_RE = re.compile(
-    r"^\d*\s*[A-Z]\s+[A-Z]+(?:\s+[A-Z]\s*[A-Z]+)*\s*$"
-)  # e.g. "2 C ONSENT P OLICY"
-
 
 def _clean_title(title: str) -> str:
     #strip trailing dots, zero-width chars, leading/trailing whitespace
@@ -71,9 +97,6 @@ def _clean_title(title: str) -> str:
 
 def _match_heading(line: str) -> Optional[Dict[str, str]]:
     #matches against section numbering patterns
-    if _PAGE_HEADER_RE.match(line):
-        return None
-
     m = SUB_SUBSECTION_PATTERN.match(line)
     if m:
         return {"id": m.group(1), "title": _clean_title(m.group(2)),
@@ -318,14 +341,19 @@ def fetch_pdf_chunks(
     _assign_pages(clauses, pages)
 
     clauses = _postprocess_clauses(clauses)
+     
+    #change 3: removed fallback text to avoid noise in retrieval
+    """fallback = _fallback_chunks(unclaimed, source, doc_type=doc_type,
+                                document_name=doc_name) if unclaimed else []"""
+    fallback = []
 
-    fallback = _fallback_chunks(unclaimed, source, doc_type=doc_type,
-                                document_name=doc_name) if unclaimed else []
-
-    if not clauses and not fallback:
+    """if not clauses and not fallback:
         print(f"Warning: No clauses or text found in {source}.")
         fallback = _page_overlap_fallback(file_path, source, doc_type,
-                                          document_name=doc_name)
+                                          document_name=doc_name)"""
+    if not clauses:
+        print(f"Warning: No clauses detected in {source}. Skipping document.")
+        return []
 
     combined = clauses + fallback
     print(f"  {source}: {len(clauses)} clause chunk(s) + {len(fallback)} fallback chunk(s)")

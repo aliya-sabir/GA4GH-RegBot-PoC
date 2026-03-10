@@ -112,7 +112,7 @@ class ComplianceChecker:
                     }
                 ],
                 max_tokens=500,
-                temperature=0.2
+                temperature=0.0
             )
             llm_output = response.choices[0].message.content
         except Exception as e:

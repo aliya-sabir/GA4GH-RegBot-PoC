@@ -4,11 +4,6 @@
     "display_name": "GA4GH Framework for Responsible Sharing",
     "source_url": "https://www.ga4gh.org/wp-content/uploads/Framework-Version-3September20191.pdf"
   },
-  "GA4GH DAA Template Clauses 2024 Final.pdf": {
-    "document_name": "daa_template_clauses",
-    "display_name": "GA4GH DAA Template Clauses",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-DAA-Template-Clauses-2024-Final.pdf"
-  },
   "GA4GH-Data-Privacy-and-Security-Policy_FINAL-August-2019.pdf": {
     "document_name": "data_privacy_security_policy",
     "display_name": "GA4GH Data Privacy and Security Policy",
@@ -19,19 +14,24 @@
     "display_name": "GA4GH Consent Policy",
     "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-Final-Revised-Consent-Policy_16Sept2019-1.pdf"
   },
-  "Responsible Data Sharing to Respond to the COVID-19 Pandemic_ Ethical and Legal Considerations_PUBLIC.pdf": {
-    "document_name": "covid19_data_sharing",
-    "display_name": "GA4GH COVID-19 Data Sharing",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Responsible-Data-Sharing-COVID-19.pdf"
+  "Clinical-Genomic-Consent-Clauses_20220623_FINAL.docx-1-2.pdf": {
+    "document_name": "clinical_genomic_consent_clauses",
+    "display_name": "GA4GH Clinical Genomic Consent Clauses",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/Clinical-Genomic-Consent-Clauses_20220623_FINAL.docx-1-2.pdf"
   },
-  "GA4GH_Engagement-policy_V1.0_July2021-1.pdf": {
-    "document_name": "engagement_policy",
-    "display_name": "GA4GH Engagement Policy",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH_Engagement-policy_V1.0_July2021-1.pdf"
+  "Consent-Clauses-for-Genomic-Research.docx_-1 (1).pdf": {
+    "document_name": "consent_clauses_genomic_research",
+    "display_name": "GA4GH Consent Clauses for Genomic Research",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/Consent-Clauses-for-Genomic-Research.docx_-1.pdf"
   },
-  "2021-Policy-on-Clinically-Actionable-Genomic-Research-Results-1.pdf": {
-    "document_name": "clinically_actionable_results",
-    "display_name": "GA4GH Policy on Clinically Actionable Genomic Research Results",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/2021-Policy-on-Clinically-Actionable-Genomic-Research-Results-1.pdf"
+  "Large-Scale-Initiatives-Consent-Clauses.docx-2-1.pdf": {
+    "document_name": "large_scale_consent_clauses",
+    "display_name": "GA4GH Large-Scale Initiatives Consent Clauses",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/Large-Scale-Initiatives-Consent-Clauses.docx-2-1.pdf"
+  },
+  "Model consent clauses for rare disease research.pdf": {
+    "document_name": "rare_disease_consent_clauses",
+    "display_name": "GA4GH Model Consent Clauses for Rare Disease Research",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/Model-consent-clauses-for-rare-disease-research.pdf"
   }
 }

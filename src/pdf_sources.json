@@ -2,41 +2,49 @@
   "Framework-Version-3September20191.pdf": {
     "document_name": "framework",
     "display_name": "GA4GH Framework for Responsible Sharing",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Framework-Version-3September20191.pdf"
+    "source_url": "https://www.ga4gh.org/framework/",
+     "doc_type": "policy"
   },
   "GA4GH-Data-Privacy-and-Security-Policy_FINAL-August-2019.pdf": {
     "document_name": "data_privacy_security_policy",
     "display_name": "GA4GH Data Privacy and Security Policy",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-Data-Privacy-and-Security-Policy_FINAL-August-2019.pdf"
+    "source_url": "https://www.ga4gh.org/product/data-privacy-and-security-policy/",
+     "doc_type": "policy"
   },
   "GA4GH-Final-Revised-Consent-Policy_16Sept2019-1.pdf": {
     "document_name": "consent_policy",
     "display_name": "GA4GH Consent Policy",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-Final-Revised-Consent-Policy_16Sept2019-1.pdf"
+    "source_url": "https://www.ga4gh.org/product/consent-policy/",
+     "doc_type": "policy"
   },
   "Clinical-Genomic-Consent-Clauses_20220623_FINAL.docx-1-2.pdf": {
     "document_name": "clinical_genomic_consent_clauses",
     "display_name": "GA4GH Clinical Genomic Consent Clauses",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Clinical-Genomic-Consent-Clauses_20220623_FINAL.docx-1-2.pdf"
+    "source_url": "https://www.ga4gh.org/resource-library/#{%22document%22:{%22category%22:%22Toolkit%20Component%22,%22related_products%22:%22Consent%20Toolkit%22}}",
+    "doc_type": "consent_toolkit"
   },
   "Consent-Clauses-for-Genomic-Research.docx_-1 (1).pdf": {
     "document_name": "consent_clauses_genomic_research",
     "display_name": "GA4GH Consent Clauses for Genomic Research",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Consent-Clauses-for-Genomic-Research.docx_-1.pdf"
+    "source_url": "https://www.ga4gh.org/resource-library/#{%22document%22:{%22category%22:%22Toolkit%20Component%22,%22related_products%22:%22Consent%20Toolkit%22}}",
+    "doc_type": "consent_toolkit"
   },
   "Large-Scale-Initiatives-Consent-Clauses.docx-2-1.pdf": {
     "document_name": "large_scale_consent_clauses",
     "display_name": "GA4GH Large-Scale Initiatives Consent Clauses",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Large-Scale-Initiatives-Consent-Clauses.docx-2-1.pdf"
+    "source_url": "https://www.ga4gh.org/resource-library/#{%22document%22:{%22category%22:%22Toolkit%20Component%22,%22related_products%22:%22Consent%20Toolkit%22}}",
+    "doc_type": "consent_toolkit"
   },
   "Model consent clauses for rare disease research.pdf": {
     "document_name": "rare_disease_consent_clauses",
     "display_name": "GA4GH Model Consent Clauses for Rare Disease Research",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Model-consent-clauses-for-rare-disease-research.pdf"
+    "source_url": "https://www.ga4gh.org/resource-library/#{%22document%22:{%22category%22:%22Toolkit%20Component%22,%22related_products%22:%22Consent%20Toolkit%22}}",
+    "doc_type": "consent_toolkit"
   },
   "Pediatric-Consent-to-Genetic-Research_-Clauses-1-1.pdf": {
     "document_name": "pediatric_consent_clauses",
     "display_name": "GA4GH Pediatric Consent to Genetic Research Clauses",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/Pediatric-Consent-to-Genetic-Research_-Clauses-1-1.pdf"
+    "source_url": "https://www.ga4gh.org/resource-library/#{%22document%22:{%22category%22:%22Toolkit%20Component%22,%22related_products%22:%22Consent%20Toolkit%22}}",
+    "doc_type": "consent_toolkit"
   }
 }

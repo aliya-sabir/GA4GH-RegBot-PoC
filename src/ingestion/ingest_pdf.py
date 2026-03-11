@@ -1,6 +1,7 @@
 import json
 import sys
 import re
+import pdfplumber
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -107,9 +108,62 @@ def extract_pages(file_path: str) -> List[Tuple[int, str]]:
             pages.append((i, _clean_text(text)))
     return pages
 
+def extract_tables(pdf_path: str) -> List[Tuple[int, List[str]]]:
+    #the consent toolkit docs contain tables 
+    rows = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for pg_no, page in enumerate(pdf.pages, start=1):
+            tables = page.extract_tables()
+
+            for table in tables:
+                for row in table:
+                    if row:
+                        rows.append((pg_no,row))
+    return rows
+
+# skip header rows and metadata that pdfplumber picks up from non-content tables
+_TABLE_SKIP_RE = re.compile(
+    r"^(categories|consent\s+clause|consent\s+elements|summary\s+of\s+revisions"
+    r"|date\s+effective|deliverable|version|special\s+thanks|policy\s+number)",
+    re.IGNORECASE,
+)
+
+def table_rows_to_chunks(
+    #making chunks out of extracted tables
+    rows: List[Tuple[int, List[str]]],
+    source: str,
+    document_name: str,
+    doc_type: str = "consent_toolkit",
+) -> List[Dict[str, Any]]:
+    chunks = []
+
+    for i, (pg_no, row) in enumerate(rows):
+        topic = (row[0] or "").strip() if len(row) > 0 else ""
+        clause = (row[1] or "").strip() if len(row) > 1 else ""
+
+        if not clause or len(clause) < 20:
+            continue
+        # skip header/metadata rows
+        if _TABLE_SKIP_RE.match(topic) or _TABLE_SKIP_RE.match(clause):
+            continue
+
+        content = f"Topic: {topic}\nClause: {clause}"
+        chunks.append(_make_chunk(
+            chunk_id=f"table_{i}",
+            title=topic,
+            content=content,
+            parent_id=None,
+            level="consent_clause",
+            source=source,
+            page=pg_no,
+            doc_type=doc_type,
+            document_name=document_name,
+        ))
+    return chunks
+
 
 def extract_pdf_text(file_path: str) -> str:
-    #return cobined text 
+    #return combined text 
     return "\n".join(text for _, text in extract_pages(file_path))
 
 
@@ -375,6 +429,10 @@ def fetch_pdf_chunks(
     _assign_pages(clauses, pages)
 
     clauses = _postprocess_clauses(clauses)
+
+    # extract table-based consent clauses (consent toolkit docs)
+    table_rows = extract_tables(file_path)
+    table_chunks = table_rows_to_chunks(table_rows, source, doc_name, doc_type) if table_rows else []
      
     #change 3: removed fallback text to avoid noise in retrieval
     """fallback = _fallback_chunks(unclaimed, source, doc_type=doc_type,
@@ -385,12 +443,12 @@ def fetch_pdf_chunks(
         print(f"Warning: No clauses or text found in {source}.")
         fallback = _page_overlap_fallback(file_path, source, doc_type,
                                           document_name=doc_name)"""
-    if not clauses:
+    if not clauses and not table_chunks:
         print(f"Warning: No clauses detected in {source}. Skipping document.")
         return []
 
-    combined = clauses + fallback
-    print(f"  {source}: {len(clauses)} clause chunk(s) + {len(fallback)} fallback chunk(s)")
+    combined = clauses + table_chunks + fallback
+    print(f"  {source}: {len(clauses)} clause chunk(s) + {len(table_chunks)} table chunk(s) + {len(fallback)} fallback chunk(s)")
     return combined
 
 

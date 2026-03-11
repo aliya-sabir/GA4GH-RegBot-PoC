@@ -33,6 +33,7 @@ SECTION_PATTERN = re.compile(r"^(\d+)[\.\s]+(.+)$")
 ROMAN_SECTION_PATTERN = re.compile(rf"^({_ROMAN})\.?\s+(.+)$", re.IGNORECASE)
 MIXED_PATTERN = re.compile(rf"^(\d+)\.({_ROMAN})\.?\s+(.+)$", re.IGNORECASE) #some pdfs have a mix of numeric systems
 
+#change 3: added more patterns to ignore such as headers footers and common irrelevant sections
 #for cleaning up pages headers and footers 
 
 _PAGE_NUMBER_RE = re.compile(r"^\s*\d{1,3}\s*$")
@@ -50,6 +51,31 @@ _DOC_TITLE_HEADERS = [
     re.compile(r"^\s*FRAMEWORK\s+FOR\s+INVOLVING\s+AND\s+ENGAGING.*$", re.IGNORECASE),
     re.compile(r"^\s*Version\s+POL\s+\d+.*$", re.IGNORECASE),
 ]
+
+#irrelevant sections common in many docs
+IGNORE_TITLES = [
+    "acknowledgements",
+    "references",
+    "contributors",
+    "revision history",
+    "resources",
+    "appendix",
+    "background",
+    "purpose",
+    "introduction",
+    "overview",
+    "context",
+    "preamble",
+    "conclusion",
+    "discussion",
+    "implementation mechanisms and amendments",
+    "framework genesis and purpose",
+]
+
+#removing appendix sections
+def _ignore_fluff(title: str):
+    t = title.lower()
+    return any(ig in t for ig in IGNORE_TITLES)
 
 def _is_header_or_footer(line: str) -> bool:
     stripped = line.strip()
@@ -177,6 +203,7 @@ def parse_clauses(
     current_section: Optional[Dict[str, Any]] = None
     current_sub: Optional[Dict[str, Any]] = None
     section_ids: Dict[str, str] = {}
+    ignore_mode = False
 
     def _flush_sub():
         nonlocal current_sub
@@ -204,6 +231,13 @@ def parse_clauses(
             level = heading["level"]
             cid = heading["id"]
 
+             #appendices are not helpful even as fallback text so raising a flag to ignore all of them
+            if _ignore_fluff(heading["title"]):
+                _flush_section()
+                ignore_mode = True
+                continue
+
+            ignore_mode = False
             if level == "section":
                 _flush_section()
                 current_section = _make_chunk(
@@ -228,6 +262,8 @@ def parse_clauses(
                 section_ids[cid] = cid
             continue
 
+        if ignore_mode:
+            continue
         if current_sub is not None:
             current_sub["content"] += " " + line
         elif current_section is not None:

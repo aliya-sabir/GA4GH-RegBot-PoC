@@ -9,11 +9,6 @@
     "display_name": "GA4GH DAA Template Clauses",
     "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-DAA-Template-Clauses-2024-Final.pdf"
   },
-  "GA4GH Data Sharing Lexicon_Feb_2025.pdf": {
-    "document_name": "data_sharing_lexicon",
-    "display_name": "GA4GH Data Sharing Lexicon",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH-Data-Sharing-Lexicon-Feb-2025.pdf"
-  },
   "GA4GH-Data-Privacy-and-Security-Policy_FINAL-August-2019.pdf": {
     "document_name": "data_privacy_security_policy",
     "display_name": "GA4GH Data Privacy and Security Policy",
@@ -29,9 +24,14 @@
     "display_name": "GA4GH COVID-19 Data Sharing",
     "source_url": "https://www.ga4gh.org/wp-content/uploads/Responsible-Data-Sharing-COVID-19.pdf"
   },
-  "SAMv1.pdf": {
-    "document_name": "sam_v1",
-    "display_name": "GA4GH SAM v1",
-    "source_url": "https://www.ga4gh.org/wp-content/uploads/SAMv1.pdf"
+  "GA4GH_Engagement-policy_V1.0_July2021-1.pdf": {
+    "document_name": "engagement_policy",
+    "display_name": "GA4GH Engagement Policy",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/GA4GH_Engagement-policy_V1.0_July2021-1.pdf"
+  },
+  "2021-Policy-on-Clinically-Actionable-Genomic-Research-Results-1.pdf": {
+    "document_name": "clinically_actionable_results",
+    "display_name": "GA4GH Policy on Clinically Actionable Genomic Research Results",
+    "source_url": "https://www.ga4gh.org/wp-content/uploads/2021-Policy-on-Clinically-Actionable-Genomic-Research-Results-1.pdf"
   }
 }

@@ -20,6 +20,12 @@ class VectorStore:
         )
 
     def store_chunks(self, chunks: List[Dict[str, Any]]) -> int:
+        # clear old data before re-ingesting
+        self.client.delete_collection(COLLECTION_NAME)
+        self.collection = self.client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"},
+        )
         # I had memory running out issue so processing chunks in batches
         stored = 0
         for i in range(0, len(chunks), INGEST_BATCH):

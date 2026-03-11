@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 
 from compliance import ComplianceChecker, _readable_citation, _load_display_names
 from ingestion import fetch_chunks, fetch_pdf_chunks, fetch_all_pdfs, VectorStore
+from ingestion.ingest_pdf import _load_source_config
 
 URL = "https://www.ga4gh.org/framework/"
 
@@ -54,7 +55,8 @@ class RegBot:
         if path.is_dir():
             chunks = fetch_all_pdfs(source)
         elif path.is_file() and path.suffix.lower() == ".pdf":
-            chunks = fetch_pdf_chunks(source)
+            cfg = _load_source_config().get(path.name, {})
+            chunks = fetch_pdf_chunks(source, doc_type=cfg.get("doc_type", "policy"))
         else:
             chunks = fetch_chunks(source)
 

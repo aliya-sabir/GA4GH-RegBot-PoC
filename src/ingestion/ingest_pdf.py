@@ -383,7 +383,7 @@ def _assign_pages(
 def _page_overlap_fallback(
     file_path: str,
     source: str,
-    doc_type: str = "policy",
+    doc_type: str,
     document_name: str = "",
 ) -> List[Dict[str, Any]]:
     #last resort fallback split each page's text
@@ -410,7 +410,7 @@ def _page_overlap_fallback(
 
 def fetch_pdf_chunks(
     file_path: str,
-    doc_type: str = "policy",
+    doc_type: str,
     source_url: Optional[str] = None,
     document_name: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
@@ -430,10 +430,12 @@ def fetch_pdf_chunks(
 
     clauses = _postprocess_clauses(clauses)
 
-    # extract table-based consent clauses (consent toolkit docs)
-    table_rows = extract_tables(file_path)
-    table_chunks = table_rows_to_chunks(table_rows, source, doc_name, doc_type) if table_rows else []
-     
+    # extract table-based consent clauses (consent toolkit docs only)
+    table_chunks = []
+    if doc_type == "consent_toolkit":
+        table_rows = extract_tables(file_path)
+        table_chunks = table_rows_to_chunks(table_rows, source, doc_name, doc_type) if table_rows else []
+
     #change 3: removed fallback text to avoid noise in retrieval
     """fallback = _fallback_chunks(unclaimed, source, doc_type=doc_type,
                                 document_name=doc_name) if unclaimed else []"""
@@ -462,7 +464,6 @@ def _load_source_config() -> Dict[str, Dict[str, str]]:
 
 def fetch_all_pdfs(
     directory: str,
-    doc_type: str = "policy",
 ) -> List[Dict[str, Any]]:
     #ingest all PDFs in a directory
     pdf_dir = Path(directory)
@@ -472,12 +473,15 @@ def fetch_all_pdfs(
 
     source_map = _load_source_config()
     all_chunks: List[Dict[str, Any]] = []
-    #sorting for reproducibility 
+
     for pdf_file in sorted(pdf_dir.glob("*.pdf")):
+        #sorting for reproducibility 
         print(f"Ingesting: {pdf_file.name}")
         cfg = source_map.get(pdf_file.name, {})
+        doc_type = cfg.get("doc_type","policy")
         all_chunks.extend(fetch_pdf_chunks(
-            str(pdf_file), doc_type,
+            str(pdf_file), 
+            doc_type,
             source_url=cfg.get("source_url"),
             document_name=cfg.get("document_name"),
         ))
@@ -492,7 +496,9 @@ if __name__ == "__main__":
     pdf_path = sys.argv[1] if len(sys.argv) > 1 else None
 
     if pdf_path:
-        chunks = fetch_pdf_chunks(pdf_path)
+        source_map = _load_source_config()
+        cfg = source_map.get(Path(pdf_path).name, {})
+        chunks = fetch_pdf_chunks(pdf_path, doc_type=cfg.get("doc_type", "policy"))
     else:
         chunks = fetch_all_pdfs(docs_dir)
 

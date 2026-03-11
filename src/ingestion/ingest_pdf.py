@@ -175,7 +175,7 @@ def table_rows_to_chunks(
     doc_type: str = "consent_toolkit",
 ) -> List[Dict[str, Any]]:
     chunks = []
-    last_topic = ""  # carry forward for merged cells
+    last_topic = "" 
 
     for i, (pg_no, row) in enumerate(rows):
         topic = (row[0] or "").strip().replace("\n", " ") if len(row) > 0 else ""
@@ -214,7 +214,6 @@ def extract_pdf_text(file_path: str) -> str:
 
 
 def _clean_title(title: str) -> str:
-    #strip trailing dots, zero-width chars, leading/trailing whitespace
     return title.strip().strip(".")
 
 

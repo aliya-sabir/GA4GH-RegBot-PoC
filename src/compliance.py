@@ -49,7 +49,7 @@ class ComplianceChecker:
         """construct the prompt sent to the LLM"""
 
         clause_context = "\n".join(
-            f"[{_readable_citation(c['document_name'], c['clause_number'], self._display_map, c.get('title', ''))}]: {c['text']}"
+            f"[{_readable_citation(c['document_name'], c['clause_number'], self._display_map, c.get('title', ''))}] (source: {c.get('source', '')}): {c['text']}"
             for c in clauses
         )
 
@@ -67,6 +67,7 @@ class ComplianceChecker:
             "- Focus on what the consent form lacks, not which clause requires it\n\n"
             "RULES FOR citations:\n"
             "- Use the exact citation labels from the clauses above (text in square brackets)\n"
+            "- Include the source URL from the clause (text after 'source:')\n"
             "- Include a short excerpt of the relevant clause text\n\n"
             "Return ONLY valid JSON in the format:\n\n"
             '{\n'
@@ -74,7 +75,7 @@ class ComplianceChecker:
             '  "missing_elements": ["No description of what happens to samples after testing", "No withdrawal rights or data deletion procedure"],\n'
             '  "suggested_fix": "1. Add disclosure of sample storage and data retention policy. 2. Include withdrawal rights with procedure for data deletion. (numbered list)",\n'
             '  "citations": [\n'
-            '    {"citation": "Document Name \u2013 Topic", "title": "clause title", "excerpt": "relevant clause text"}\n'
+            '    {"citation": "Document Name \u2013 Topic", "source_url": "https://...", "title": "clause title", "excerpt": "relevant clause text"}\n'
             '  ]\n'
             '}\n\n'
             "Respond only with a single JSON object. Do not include preamble, explanation, or markdown."

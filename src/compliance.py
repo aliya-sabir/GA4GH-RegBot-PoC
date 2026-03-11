@@ -69,6 +69,8 @@ class ComplianceChecker:
             '  ]\n'
             '}\n\n'
             "Do not include any text outside the JSON."
+            "Respond only with a single JSON object. Do not include preamble, explanation, or markdown. "
+            "JSON keys: status, missing_elements, suggested_fix, citations."
         )
     
     def _extract_json(self, text: str) -> Dict[str, Any] | None:
@@ -111,7 +113,7 @@ class ComplianceChecker:
                         "content": prompt
                     }
                 ],
-                max_tokens=500,
+                max_tokens=2500,
                 temperature=0.0
             )
             llm_output = response.choices[0].message.content
@@ -119,10 +121,7 @@ class ComplianceChecker:
             print("LLM request failed:", e)
             return fallback
 
-        parsed = self._extract_json(llm_output)
-
-        if parsed is None:
-            return fallback
+        parsed = self._extract_json(llm_output) 
 
         return parsed
     

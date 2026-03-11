@@ -12,7 +12,7 @@ class VectorStore:
 
     def __init__(self, embedding_model: SentenceTransformer):
         self.embedding_model = embedding_model
-        self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        self.reranker = CrossEncoder('sentence-transformers/msmarco-MiniLM-L-12-v3')
         self.client = chromadb.PersistentClient(path=CHROMA_DIR)
         self.collection = self.client.get_or_create_collection(
             name=COLLECTION_NAME,

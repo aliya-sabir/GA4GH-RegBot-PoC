@@ -153,7 +153,18 @@ def extract_pdf_text(file_path: str) -> str:
 
 
 def _clean_title(title: str) -> str:
-    return title.strip().strip(".")
+    title = re.sub(r"\s+", " ", title).strip()
+    title = re.sub(
+        r"\s+(?:\[)?(?:"
+        r"C\s*ONSENT\s+P\s*OLICY"
+        r"|D\s*ATA\s+P\s*RIVACY\s+AND\s+S\s*ECURITY\s+P\s*OLICY"
+        r"|F\s*RAMEWORK\s+FOR\s+R\s*ESPONSIBLE\s+S\s*HARING"
+        r")\]?\s*$",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+    return title.strip().strip(".").strip("[]")
 
 def _split_heading_title(title: str) -> Tuple[str, str]:
     #some PDFs inline the first sentence after the heading label

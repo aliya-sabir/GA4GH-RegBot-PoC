@@ -141,50 +141,57 @@ class VectorStore:
         query_embedding = self.embedding_model.encode(
             "Represent this sentence for searching relevant passages: " + query_text
         ).tolist()
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k * 3,
-            include=["documents", "metadatas", "distances"],
-        )
 
         clauses: List[Dict[str, Any]] = []
-        for doc, meta, dist in zip(
-            #since only one query currently, might expand on this later 
-            results["documents"][0],
-            results["metadatas"][0],
-            results["distances"][0],
-        ):
-            clauses.append({
-                "document_name": meta.get("document_name", ""),
-                "clause_number": meta.get("clause_id", meta.get("chunk_id", "")),
-                "title": meta.get("title", ""),
-                "text": meta.get("content", doc),
-                "similarity": round(1 - dist, 4),
-                "source": meta.get("source_url", ""),
-                "page": meta.get("page", 0),
-                "doc_type": meta.get("doc_type", ""),
-            })
+        for doc_type in ("policy", "consent_toolkit"):
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=top_k * 3,
+                where={"doc_type": doc_type},
+                include=["documents", "metadatas", "distances"],
+            )
+
+            for doc, meta, dist in zip(
+                results["documents"][0],
+                results["metadatas"][0],
+                results["distances"][0],
+            ):
+                clauses.append({
+                    "document_name": meta.get("document_name", ""),
+                    "clause_number": meta.get("clause_id", meta.get("chunk_id", "")),
+                    "title": meta.get("title", ""),
+                    "text": meta.get("content", doc),
+                    "similarity": round(1 - dist, 4),
+                    "source": meta.get("source_url", ""),
+                    "page": meta.get("page", 0),
+                    "doc_type": meta.get("doc_type", ""),
+                })
 
         if self._bm25:
             scores = self._bm25.get_scores(_tokenize(query_text))
-            top_indices = sorted(
-                range(len(scores)),
-                key=lambda i: scores[i],
-                reverse=True
-            )[:top_k * 2]
-            for i in top_indices:
-                c = self._bm25_chunks[i]
-                clauses.append({
-                    "document_name": c.get("document_name", ""),
-                    "clause_number": c.get("clause_id", c.get("chunk_id", "")),
-                    "title": c.get("title", ""),
-                    "text": c["content"],
-                    "similarity": None,
-                    "bm25_score": round(float(scores[i]), 4),
-                    "source": c.get("source_url", ""),
-                    "page": c.get("page", 0),
-                    "doc_type": c.get("type", ""),
-                })
+            indexed_chunks = list(enumerate(self._bm25_chunks))
+            for doc_type in ("policy", "consent_toolkit"):
+                doc_type_indices = [
+                    i for i, chunk in indexed_chunks if chunk.get("type") == doc_type
+                ]
+                top_indices = sorted(
+                    doc_type_indices,
+                    key=lambda i: scores[i],
+                    reverse=True,
+                )[:top_k * 2]
+                for i in top_indices:
+                    c = self._bm25_chunks[i]
+                    clauses.append({
+                        "document_name": c.get("document_name", ""),
+                        "clause_number": c.get("clause_id", c.get("chunk_id", "")),
+                        "title": c.get("title", ""),
+                        "text": c["content"],
+                        "similarity": None,
+                        "bm25_score": round(float(scores[i]), 4),
+                        "source": c.get("source_url", ""),
+                        "page": c.get("page", 0),
+                        "doc_type": c.get("type", ""),
+                    })
 
         #change 2: added reranker for better relevance
         if self.reranker:
@@ -201,8 +208,6 @@ class VectorStore:
                 rerank_scores.extend(batch_scores)
             for c, score in zip(clauses, rerank_scores):
                 c["rerank_score"] = round(float(score), 4)
-                if c.get("doc_type") == "policy":
-                    c["rerank_score"] = round(c["rerank_score"] + 0.8, 4)
             clauses.sort(key=lambda x: x["rerank_score"], reverse=True)
 
         #deduplicate: keep highest-ranked chunk per doc+clause_number
@@ -210,13 +215,4 @@ class VectorStore:
         
         deduped_clauses = deduplicate_clauses(clauses)
 
-        policy_quota = top_k
-        policy_clauses = [c for c in deduped_clauses if c.get("doc_type") == "policy"]
-        remaining_clauses = [c for c in deduped_clauses if c.get("doc_type") != "policy"]
-
-        selected: List[Dict[str, Any]] = []
-        selected.extend(policy_clauses[:policy_quota])
-        if len(selected) < top_k:
-            selected.extend(remaining_clauses[: top_k - len(selected)])
-
-        return selected[:top_k]
+        return deduped_clauses[:top_k]

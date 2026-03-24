@@ -65,8 +65,11 @@ class VectorStore:
 
     def __init__(self, embedding_model: SentenceTransformer):
         self.embedding_model = embedding_model
-        reranker_model_name = os.getenv("RERANKER_MODEL", DEFAULT_RERANKER_MODEL)
-        self.reranker = CrossEncoder(reranker_model_name)
+        if os.getenv("DISABLE_RERANKER") == "1":
+            self.reranker = None
+        else:
+            reranker_model_name = os.getenv("RERANKER_MODEL", DEFAULT_RERANKER_MODEL)
+            self.reranker = CrossEncoder(reranker_model_name)
         self.client = chromadb.PersistentClient(path=CHROMA_DIR)
   
         self._bm25 = None

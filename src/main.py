@@ -78,7 +78,7 @@ class RegBot:
         print("Retrieving relevant clauses...")
         results = self.store.query(user_query, top_k)
         if not results:
-            print("Warning: ChromaDB collection is empty run ingest first.")
+            print("Warning: ChromaDB collection is empty â€” run ingest first.")
         return results
 
     def check_compliance(self, user_consent_form: str, clauses: List[Dict[str,str]], top_k: int = 10) -> dict:

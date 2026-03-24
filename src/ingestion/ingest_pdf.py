@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 import re
 import pdfplumber
@@ -451,7 +450,10 @@ def fetch_pdf_chunks(
     source = source_url or path.name
     doc_name = document_name or path.stem
     text = extract_pdf_text(file_path)
-    clauses, unclaimed = parse_clauses(text, source, doc_type, document_name=doc_name)
+    clauses: List[Dict[str, Any]] = []
+    unclaimed = ""
+    if doc_type != "consent_toolkit":
+        clauses, unclaimed = parse_clauses(text, source, doc_type, document_name=doc_name)
 
     pages = extract_pages(file_path)
     _assign_pages(clauses, pages)

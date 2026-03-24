@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from typing import Any, List, Optional, Dict
@@ -7,11 +6,12 @@ from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 from sentence_transformers import SentenceTransformer
 
-from compliance import ComplianceChecker, _readable_citation, _load_display_names
+from compliance import ComplianceChecker
 from ingestion import fetch_chunks, fetch_pdf_chunks, fetch_all_pdfs, VectorStore
 from ingestion.ingest_pdf import _load_source_config
 
 URL = "https://www.ga4gh.org/framework/"
+DEFAULT_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 load_dotenv()
 
@@ -22,14 +22,15 @@ class RegBot:
     def __init__(
         self, 
         api_key: Optional[str] = None,
-        model_name: str = "openai/gpt-oss-20b"
+        model_name: str = "meta-llama/Llama-3.3-70B-Instruct"
     ):
         self.api_key = api_key or os.getenv("HF_TOKEN")
         if not self.api_key:
             raise ValueError("HF_TOKEN not found")
         
         self.model_name = model_name
-        self.embedding_model = SentenceTransformer('BAAI/bge-base-en-v1.5')
+        embedding_model_name = os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+        self.embedding_model = SentenceTransformer(embedding_model_name)
         self.store = VectorStore(self.embedding_model)
         self.load_llm()
         print("Initializing RegBot Core...")
@@ -77,7 +78,7 @@ class RegBot:
         print("Retrieving relevant clauses...")
         results = self.store.query(user_query, top_k)
         if not results:
-            print("Warning: ChromaDB collection is empty — run ingest first.")
+            print("Warning: ChromaDB collection is empty run ingest first.")
         return results
 
     def check_compliance(self, user_consent_form: str, clauses: List[Dict[str,str]], top_k: int = 10) -> dict:
@@ -90,23 +91,7 @@ class RegBot:
         return checker.check_compliance(user_consent_form, clauses, top_k)
 
 if __name__ == "__main__":
-    # Entry point for testing the pipeline
-    bot = RegBot()
-    bot.ingest_policy_documents("C:/Users/AliyaSabir/GA4GH-RegBot/src/docs")
-    
-    # Test retrieval with sample query
-    query = "We will obtain explicit consent from participants for data sharing and secondary research."
-    retrieved_clauses = bot.retrieve_relevant_clauses(query, top_k=10)
-    
-    print(f"\nTop {len(retrieved_clauses)} relevant clauses for query:")
-    print(f"'{query}'\n")
-    
-    for r in retrieved_clauses:
-        citation = _readable_citation(r['document_name'], r['clause_number'], _load_display_names(), r.get('title', ''))
-        print(f"[{citation}] (similarity: {r['similarity']:.4f})")
-        print(f"  {r['text']}")
-        print()
+    # Delegate test runs to run_test.py to keep main uncluttered.
+    from run_test import main as _run_test_main
 
-    llm_output = bot.check_compliance(query, retrieved_clauses, top_k=10)
-    print("\nCompliance Analysis Result:") 
-    print(json.dumps(llm_output, indent=2, ensure_ascii=False))
+    _run_test_main()

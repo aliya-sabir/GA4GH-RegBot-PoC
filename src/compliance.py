@@ -60,9 +60,9 @@ class ComplianceChecker:
             "RELEVANT GA4GH REGULATORY CLAUSES:\n"
             f"{clause_context}\n\n"
             "INSTRUCTIONS:\n"
-            "Step 1 — Read the consent form carefully and identify what topics it DOES cover.\n"
-            "Step 2 — For each GA4GH clause above, determine whether the consent form adequately addresses that requirement.\n"
-            "Step 3 — List only requirements that the consent form FAILS to address or addresses inadequately.\n\n"
+            "Step 1 â€” Read the consent form carefully and identify what topics it DOES cover.\n"
+            "Step 2 â€” For each GA4GH clause above, determine whether the consent form adequately addresses that requirement.\n"
+            "Step 3 â€” List only requirements that the consent form FAILS to address or addresses inadequately.\n\n"
             "STRICT RULES:\n"
             "- A missing element must be something ABSENT from the consent form, not just mentioned in a clause.\n"
             "- If the consent form addresses a topic even partially, do NOT list it as missing.\n"
@@ -132,7 +132,6 @@ class ComplianceChecker:
 
         parsed = self._extract_json(llm_output) 
         if parsed is None:
-            print("DEBUG: JSON parse failed. Raw output:", llm_output[:300])
             return fallback
         return parsed
     

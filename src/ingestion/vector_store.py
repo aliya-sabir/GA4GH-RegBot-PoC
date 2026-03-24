@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from typing import Any, Dict, List
 from rank_bm25 import BM25Okapi
 import re
@@ -9,6 +10,8 @@ import hashlib
 CHROMA_DIR = str(Path(__file__).parent.parent / "chroma_db")
 COLLECTION_NAME = "ga4gh_chunks"
 INGEST_BATCH = 64 
+RERANK_BATCH = 16
+DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
 def _build_search_text(chunk: Dict[str, Any]) -> str:
@@ -62,7 +65,8 @@ class VectorStore:
 
     def __init__(self, embedding_model: SentenceTransformer):
         self.embedding_model = embedding_model
-        self.reranker = CrossEncoder('BAAI/bge-reranker-base')
+        reranker_model_name = os.getenv("RERANKER_MODEL", DEFAULT_RERANKER_MODEL)
+        self.reranker = CrossEncoder(reranker_model_name)
         self.client = chromadb.PersistentClient(path=CHROMA_DIR)
   
         self._bm25 = None
@@ -79,7 +83,7 @@ class VectorStore:
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
-        # I had memory running out issue so processing chunks in batches
+        #I had memory running out issue so processing chunks in batches
         stored = 0
         for i in range(0, len(chunks), INGEST_BATCH):
             batch = chunks[i : i + INGEST_BATCH]
@@ -101,6 +105,7 @@ class VectorStore:
                     "source_url": c.get("source_url", ""),
                     "page": c.get("page") or 0,
                     "keywords": ",".join(c.get("keywords", [])),
+                    "doc_type": c.get("type", ""),
                 }
                 for c in batch
             ]
@@ -129,14 +134,13 @@ class VectorStore:
         #top_k similar clauses for query
         if self.collection.count() == 0:
             return []
-
-        # Use BGE-style instruction prefix for queries
+        
         query_embedding = self.embedding_model.encode(
             "Represent this sentence for searching relevant passages: " + query_text
         ).tolist()
         results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=top_k*3,   #added more results for reranker
+            n_results=top_k * 3,
             include=["documents", "metadatas", "distances"],
         )
 
@@ -155,6 +159,7 @@ class VectorStore:
                 "similarity": round(1 - dist, 4),
                 "source": meta.get("source_url", ""),
                 "page": meta.get("page", 0),
+                "doc_type": meta.get("doc_type", ""),
             })
 
         if self._bm25:
@@ -163,7 +168,7 @@ class VectorStore:
                 range(len(scores)),
                 key=lambda i: scores[i],
                 reverse=True
-            )[:top_k*2]
+            )[:top_k * 2]
             for i in top_indices:
                 c = self._bm25_chunks[i]
                 clauses.append({
@@ -175,23 +180,40 @@ class VectorStore:
                     "bm25_score": round(float(scores[i]), 4),
                     "source": c.get("source_url", ""),
                     "page": c.get("page", 0),
+                    "doc_type": c.get("type", ""),
                 })
 
         #change 2: added reranker for better relevance
         if self.reranker:
-            scores = self.reranker.predict([
+            pairs = [
                 (query_text, f"{c.get('title', '')}\n{c.get('text', '')}")
                 for c in clauses
-            ])
-            for c, score in zip(clauses, scores):
-                c["rerank_score"] = round(score, 4)
+            ]
+            rerank_scores = []
+            for i in range(0, len(pairs), RERANK_BATCH):
+                batch_scores = self.reranker.predict(
+                    pairs[i:i + RERANK_BATCH],
+                    batch_size=RERANK_BATCH,
+                )
+                rerank_scores.extend(batch_scores)
+            for c, score in zip(clauses, rerank_scores):
+                c["rerank_score"] = round(float(score), 4)
+                if c.get("doc_type") == "policy":
+                    c["rerank_score"] = round(c["rerank_score"] + 0.8, 4)
             clauses.sort(key=lambda x: x["rerank_score"], reverse=True)
-
-        #return clauses[:top_k]
 
         #deduplicate: keep highest-ranked chunk per doc+clause_number
         #avoid dropping distinct clauses that share titles
         
         deduped_clauses = deduplicate_clauses(clauses)
 
-        return deduped_clauses[:top_k]
+        policy_quota = top_k
+        policy_clauses = [c for c in deduped_clauses if c.get("doc_type") == "policy"]
+        remaining_clauses = [c for c in deduped_clauses if c.get("doc_type") != "policy"]
+
+        selected: List[Dict[str, Any]] = []
+        selected.extend(policy_clauses[:policy_quota])
+        if len(selected) < top_k:
+            selected.extend(remaining_clauses[: top_k - len(selected)])
+
+        return selected[:top_k]

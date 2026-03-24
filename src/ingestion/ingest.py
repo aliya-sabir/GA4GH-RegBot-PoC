@@ -1,39 +1,10 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+from ingestion.text_config import STOPWORDS, DOMAIN_TERMS
 
 GA4GH_FRAMEWORK_URL = "https://www.ga4gh.org/framework/"
 
-STOPWORDS = {
-    "the","and","or","a","an","to","of","for","in","on",
-    "with","by","is","are","be","this","that","it","as","at",
-    "from","not","will","can","may","shall","should","would",
-    "has","have","had","been","was","were","its","their","they",
-    "you","your","we","our","any","all","each","such","which",
-    "who","what","when","where","how","than","but","about",
-    "into","through","during","before","after","between","also",
-    "only","very","just","there","here","other","more","most",
-    "some","does","did","these","those","own","same","both",
-    "being","could","might","nor","too","then","include",
-    "including","use","used","using","make","made","given",
-    "provide","provided","well","based","however","therefore",
-    "need","case","way","part","able","apply","whether",
-    "must","upon","within","without","take","set","per",
-    "one","two","even","already","many","next","still",
-}
-
-DOMAIN_TERMS = {
-    "withdrawal", "withdraw", "authorization", "informed", "participate",
-    "sequencing", "genome", "variant", "variants", "genes",
-    "anonymized", "pseudonymized", "identifiable", "coded", "linkage",
-    "breach", "confidentiality", "identification",
-    "oversight", "accountability", "governance", "regulatory", "lawful",
-    "incidental", "disclosure", "findings", "diagnosis", "diagnostic",
-    "safeguards", "datasets", "collection", "processing", "storage",
-    "familial", "minors",
-    "commercial", "discrimination", "recontact", "limitations",
-    "dissemination", "proportionate", "registries",
-}
 
 def _extract_keywords(text):
     words = re.findall(r"[a-zA-Z]{3,}", text.lower())

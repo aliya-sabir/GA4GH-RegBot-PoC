@@ -22,8 +22,6 @@ from ingestion.text_config import (
 
 SOURCES_CONFIG = Path(__file__).parent.parent / "pdf_sources.json"
 
-#change 1: experimented with chunk size
-
 CHUNK_SIZE = 700
 CHUNK_OVERLAP = 120
 MAX_CLAUSE_CHARS = 1500
@@ -37,8 +35,6 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=CHUNK_OVERLAP,
     separators=["\n\n", "\n", ". ", " "],
 )
-
-
 
 #removing appendix sections
 def _ignore_fluff(title: str):
@@ -148,7 +144,7 @@ def table_rows_to_chunks(
 
 
 def extract_pdf_text(file_path: str) -> str:
-    #return combined text 
+    #return combined text
     return "\n".join(text for _, text in extract_pages(file_path))
 
 
@@ -256,7 +252,7 @@ def parse_clauses(
     doc_type: str = "policy",
     document_name: str = "",
 ) -> Tuple[List[Dict[str, Any]], str]:
-    # parse text into clauses 
+    # parse text into clauses
 
     #some PDFs flatten headings into long lines insert newlines before
     text = re.sub(r"(?<!^)(\b[IVX]{1,4}\.\s+[A-Z])", r"\n\1", text)
@@ -462,9 +458,8 @@ def fetch_pdf_chunks(
     doc_name = document_name or path.stem
     text = extract_pdf_text(file_path)
     clauses: List[Dict[str, Any]] = []
-    unclaimed = ""
     if doc_type != "consent_toolkit":
-        clauses, unclaimed = parse_clauses(text, source, doc_type, document_name=doc_name)
+        clauses, _ = parse_clauses(text, source, doc_type, document_name=doc_name)
 
     pages = extract_pages(file_path)
     _assign_pages(clauses, pages)
@@ -477,15 +472,7 @@ def fetch_pdf_chunks(
         table_rows = extract_tables(file_path)
         table_chunks = table_rows_to_chunks(table_rows, source, doc_name, doc_type) if table_rows else []
 
-    #change 3: removed fallback text to avoid noise in retrieval
-    """fallback = _fallback_chunks(unclaimed, source, doc_type=doc_type,
-                                document_name=doc_name) if unclaimed else []"""
     fallback = []
-
-    """if not clauses and not fallback:
-        print(f"Warning: No clauses or text found in {source}.")
-        fallback = _page_overlap_fallback(file_path, source, doc_type,
-                                          document_name=doc_name)"""
     if not clauses and not table_chunks:
         print(f"Warning: No clauses detected in {source}. Skipping document.")
         return []

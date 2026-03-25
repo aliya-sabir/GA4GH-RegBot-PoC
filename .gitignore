@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 .env
 src/chroma_db/
-src/run_test.py
+hmm.json

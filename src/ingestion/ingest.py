@@ -5,6 +5,10 @@ from ingestion.text_config import STOPWORDS, DOMAIN_TERMS
 
 GA4GH_FRAMEWORK_URL = "https://www.ga4gh.org/framework/"
 
+"""
+The web page functionality is currently minimal and does not incorporate all the advanced features in 
+ingest_pdf.py. It's implemented keeping the framework url in mind and will be extended during GSoC period.
+"""
 
 def _extract_keywords(text):
     words = re.findall(r"[a-zA-Z]{3,}", text.lower())
